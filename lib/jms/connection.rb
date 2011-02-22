@@ -100,12 +100,14 @@ module JMS
     #
     # TODO make this a class method
     def fetch_dependencies(jar_list)
-      jar_list.each do |jar|
-        JMS::logger.info "Loading Jar File:#{jar}"
-        begin
-          require jar
-        rescue Exception => exc
-          JMS::logger.error "Failed to Load Jar File:#{jar}. #{exc.to_s}"
+      if jar_list
+        jar_list.each do |jar|
+          JMS::logger.info "Loading Jar File:#{jar}"
+          begin
+            require jar
+          rescue Exception => exc
+            JMS::logger.error "Failed to Load Jar File:#{jar}. #{exc.to_s}"
+          end
         end
       end
       require 'jms/message_listener'
@@ -223,7 +225,7 @@ module JMS
 
       # Load Jar files on demand so that they do not need to be in the CLASSPATH
       # of JRuby lib directory
-      fetch_dependencies(params[:require_jars]) if params[:require_jars]
+      fetch_dependencies(params[:require_jars])
 
       connection_factory = nil
       factory = params[:factory]
@@ -265,7 +267,7 @@ module JMS
     def start
       @jms_connection.start
     end
-      
+
     # Temporarily stop delivery of incoming messages on this connection
     # Useful during a hot code update or other changes that need to be completed
     # without any new messages being processed
@@ -345,30 +347,30 @@ module JMS
 
       @jms_connection.close if @jms_connection
     end
-    
+
     # Gets the client identifier for this connection.
     def client_id
       @jms_connection.getClientID
     end
-          
+
     # Sets the client identifier for this connection.
     def client_id=(client_id)
       @jms_connection.setClientID(client_id)
     end
-    
+
     # Returns the ExceptionListener object for this connection
     # Returned class implements interface javax.jms.ExceptionListener
     def exception_listener
       @jms_connection.getExceptionListener
     end
- 
+
     # Sets an exception listener for this connection
     # See ::on_exception to set a Ruby Listener
     # Returns: nil
     def exception_listener=(listener)
       setExceptionListener(listener)
     end
-    
+
     # Whenever an exception occurs the supplied block is called
     # This is important when Connection::on_message has been used, since
     # failures to the connection would be lost otherwise
@@ -385,13 +387,13 @@ module JMS
     def on_exception(&block)
       setExceptionListener(block)
     end
-    
+
     # Gets the metadata for this connection
     # see: http://download.oracle.com/javaee/6/api/javax/jms/ConnectionMetaData.html
     def meta_data
       @jms_connection.getMetaData
     end
-    
+
     # Return a string describing the JMS provider and version
     def to_s
       md = @jms_connection.getMetaData
